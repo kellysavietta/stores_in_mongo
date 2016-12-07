@@ -2,8 +2,12 @@ module StoresInMongo
   module DocumentMethods
     def reload(*args)
       super
-      mongo_document(true) if mongo_document_loaded?
+      clear_mongo_cache
       return self
+    end
+
+    def clear_mongo_cache
+      @mongo_document = nil
     end
 
     def deep_dup(*args)
@@ -20,6 +24,7 @@ module StoresInMongo
 
     def mongo_document=(mongo_document)
       @mongo_document = mongo_document
+      self[self.mongo_key] = mongo_document.try!(:id)
     end
 
     private
@@ -40,7 +45,7 @@ module StoresInMongo
 
     def mongo_document(reload = false)
       return @mongo_document if !reload && mongo_document_loaded?
-      @mongo_document = fetch_mongo_document || initialize_mongo_document
+      self.mongo_document = fetch_mongo_document || initialize_mongo_document
     end
 
     def fetch_mongo_document
